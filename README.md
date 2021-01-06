@@ -2,13 +2,13 @@
 
 
 ### Projets Kaggle 
-- Titanic,machine learning with differents sklearn models
-- Digit recogniser, marchine learning with Keras CNN
-- House price, machine learning with differents sklearn models
-- Ion switching, machine learning with differents sklearn models
-- NLP Disaster,machine learning with differents sklearn models
-- Predict sales machine learning with Keras LSTM
-- Twitter sentiment analysis, machine learning with differents sklearn models
+- Titanic,machine learning with differents sklearn models (https://www.kaggle.com/c/titanic)
+- Digit recogniser, marchine learning with Keras CNN (https://www.kaggle.com/c/digit-recognizer)
+- House price, machine learning with differents sklearn models (https://www.kaggle.com/c/house-prices-advanced-regression-techniques)
+- Ion switching, machine learning with differents sklearn models (https://www.kaggle.com/c/liverpool-ion-switching)
+- NLP Disaster,machine learning with differents sklearn models (https://www.kaggle.com/c/nlp-getting-started)
+- Predict sales machine learning with Keras LSTM (https://www.kaggle.com/c/competitive-data-science-predict-future-sales)
+- Twitter sentiment analysis, machine learning with differents sklearn models (https://www.kaggle.com/kazanova/sentiment140)
 
 
 
