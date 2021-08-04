@@ -5,8 +5,10 @@ import statsmodels.formula.api as sm
 import statsmodels.api as sp
 import pylab as pl
 import seaborn as sns
+from numpy import arange
 import os
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score
 from sklearn import metrics
 from sklearn import preprocessing
 from sklearn import utils
@@ -14,8 +16,18 @@ from sklearn.metrics import roc_auc_score
 from sklearn import datasets
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import ElasticNetCV
 from sklearn.tree import export_graphviz
+from sklearn.ensemble import AdaBoostRegressor
+from sklearn.model_selection import RepeatedKFold
+import scipy.stats as stats
+import xgboost as xgb
 
+#Remove sklearn warning
+def warn(*args, **kwargs):
+    pass
+import warnings
+warnings.warn = warn
 
 
 # Performance metrics
@@ -23,16 +35,222 @@ from sklearn.metrics import accuracy_score, classification_report
 from sklearn import svm, tree, linear_model, neighbors, naive_bayes, ensemble, discriminant_analysis, gaussian_process
 
 
+
+
 #Data
 train=pd.read_csv("train.csv")
-#train=train.dropna(axis='columns')
 test=pd.read_csv("test.csv")
-#test=test.dropna(axis='columns')
+
+#Improve train data
+for column in train:
+    if train[column].dtypes=="object":
+        #Change NA value to 0 for categorical variables
+        train[column]=train[column].fillna(0)
+        #Change object value to category
+        train[column] = pd.Categorical(train[column])
+        #Transform str category to number 
+        train[column] = train[column].cat.codes
+    else:
+        #Fill NA with average
+        train[column]=train[column].fillna(train[column].mean())
+    
+print(train.info())
+
+#Improve test data
+for column in test:
+    if test[column].dtypes=="object":
+        #Change NA value to 0 for categorical variables
+        test[column] = test[column].fillna(0)
+        #Change object value to category
+        test[column] = pd.Categorical(test[column])
+        #Transform str category to number 
+        test[column] = test[column].cat.codes
+    else:
+        #Fill NA with average
+        test[column]=test[column].fillna(test[column].mean())
+    
+print(test.info())
+
+
+#First filter analysis : correlation matrix
+corrmat = train.corr()
+f, ax = plt.subplots(figsize=(2, 15))
+sns.heatmap(corrmat[["SalePrice"]], square=True,vmin=-1, vmax=1,cmap='BrBG', annot=True)
+dfcorrmat=pd.DataFrame(corrmat)
+
+#dftrain show variables based on correlation level
+dftrain=pd.DataFrame()
+A=0
+#N as the correlation level
+N=0.3
+while A< len(dfcorrmat["SalePrice"][dfcorrmat["SalePrice"]>N]):
+    dftrain=dftrain.append(dfcorrmat[dfcorrmat["SalePrice"][dfcorrmat["SalePrice"]>N].index[A]])
+    #print(dfcorrmat["SalePrice"][dfcorrmat["SalePrice"]>N].index[A])
+    #print(dfcorrmat["SalePrice"][dfcorrmat["SalePrice"]>N][A])
+    A+=1
+A=0
+while A< len(dfcorrmat["SalePrice"][dfcorrmat["SalePrice"]<-N]):
+    dftrain=dftrain.append(dfcorrmat[dfcorrmat["SalePrice"][dfcorrmat["SalePrice"]<-N].index[A]])
+    #print(dfcorrmat["SalePrice"][dfcorrmat["SalePrice"]<-N].index[A])
+    #print(dfcorrmat["SalePrice"][dfcorrmat["SalePrice"]<-N][A])
+    A+=1
+
+#df1 = df[['a','d']]
+dftrain = train[dftrain["SalePrice"].index.values.tolist()]
+X_train = dftrain.drop(["SalePrice"],1) 
+dftest = test[X_train.columns]
+print(dftest)
+#plt.show()
+
+
+#Real test
+#X_train = train.drop(["Id","SalePrice"],1) 
+X_train = dftrain.drop(["SalePrice"],1) 
+X_test = dftest
+y_train = dftrain["SalePrice"]
+#print(X_train,X_test,y_train)
+#y_test=test["SalePrice"]
+"""
+#Train test split for scoring purpose
+X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, test_size=0.3)
+print(X_test,y_test)
+"""
+
+#Regression problems for predicting a quantity, using some regression algorithms
+
+#Regression linear simple
+# Create linear regression object
+regr = linear_model.LinearRegression()
+# Train the model using the training sets
+regr.fit(X_train, y_train)
+# Make predictions using the testing set
+y_predRL = regr.predict(X_test)
+print(y_predRL)
+
+
+#Random forest regressor
+clf=RandomForestRegressor(n_estimators=100)
+#Train the model using the training sets 
+clf.fit(X_train, y_train)
+y_predRF=clf.predict(X_test)
+print(y_predRF)
+
+
+
+#ElasticNet Regression model
+# define model evaluation method
+cv = RepeatedKFold(n_splits=10, n_repeats=3, random_state=1)
+# define model
+ratios = arange(0, 1, 0.1)
+alphas = [ 1e-2, 1e-1, 0.0, 1.0, 10.0, 100.0]
+model = ElasticNetCV(l1_ratio=ratios, alphas=alphas, cv=cv, n_jobs=-1)
+# fit model
+model.fit(X_train, y_train)
+# make a prediction
+yhat = model.predict(X_test)
+#print(yhat)
+
+#Adaboost 
+model = AdaBoostRegressor()
+# evaluate the model
+model.fit(X_train, y_train)
+yada = model.predict(X_test)
+
+#xgBoost
+model=xgb.XGBRegressor(
+learning_rate =0.1,
+n_estimators=100,
+reg_lambda=1,
+gamma=0,
+max_depth=3)
+    
+#xgb_model = xgboost.XGBRegressor(learning_rate =0.1, n_estimators=1000, max_depth=5,
+#min_child_weight=1, gamma=0, subsample=0.8, colsample_bytree=0.8, nthread=6, scale_pos_weight=1, seed=27)
+
+model.fit(X_train, y_train)
+yxgb = model.predict(X_test)
+
+
+importance=clf.feature_importances_
+feature_imp = pd.Series(importance,index=X_train.columns).sort_values(ascending=False)
+sns.barplot(x=feature_imp, y=feature_imp.index)
+# Add labels to your graph
+plt.xlabel('Score')
+plt.ylabel('Features')
+plt.title("Important features")
+plt.legend()
+#plt.show()
+  
+#Avergae of all prediction
+avg=(y_predRL+y_predRF+yada+yxgb)/4
+"""
+# The mean squared error
+print('Mean squared error: %.2f'
+      % mean_squared_error(y_test, y_predRL))
+# The coefficient of determination: 1 is perfect prediction
+print('Coefficient of determination: %.2f'
+      % r2_score(y_test, y_predRL))
+# The mean squared error
+print('Mean squared error: %.2f'
+      % mean_squared_error(y_test, y_predRF))
+# The coefficient of determination: 1 is perfect prediction
+print('Coefficient of determination: %.2f'
+      % r2_score(y_test, y_predRF))
+# The mean squared error
+print('Mean squared error: %.2f'
+      % mean_squared_error(y_test, yada))
+# The coefficient of determination: 1 is perfect prediction
+print('Coefficient of determination: %.2f'
+      % r2_score(y_test, yada))
+# The mean squared error
+print('Mean squared error: %.2f'
+      % mean_squared_error(y_test, yxgb))
+# The coefficient of determination: 1 is perfect prediction
+print('Coefficient of determination: %.2f'
+      % r2_score(y_test, yxgb))
+# The mean squared error
+print('Mean squared error: %.2f'
+      % mean_squared_error(y_test, avg))
+# The coefficient of determination: 1 is perfect prediction
+print('Coefficient of determination: %.2f'
+      % r2_score(y_test, avg))
+"""    
+
+
+#Final submission
+sample = pd.read_csv('sample_submission.csv')
+sample["SalePrice"]=avg
+print(sample)
+sample.to_csv('Finalsub.csv', index = False)
+
+#First try score (RMSLE) 2021 = 0.154
+#(Whitout data enginering)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Old version 2019
 """
 profile = ProfileReport(train, title='Pandas Profiling Report', html={'style':{'full_width':True}})
 print(profile)
 profile.to_file(output_file="your_report.html")
-"""
+
 #Reshape
 train["LotFrontage"]= train["LotFrontage"].fillna(train["LotFrontage"].mean())
 test["LotFrontage"]= test["LotFrontage"].fillna(test["LotFrontage"].mean())
@@ -99,7 +317,7 @@ test["Exterior2nd"]= test["Exterior2nd"].fillna("CBlock", inplace = False)
 test["Exterior1st"]= test["Exterior1st"].fillna("CBlock", inplace = False)
 test["Utilities"]= test["Utilities"].fillna("NoSewr", inplace = False)
 test["MSZoning"]= test["MSZoning"].fillna("RH", inplace = False)
-
+"""
 """
 #correlation matrix
 corrmat = train.corr()
@@ -139,7 +357,7 @@ plt.title("Test")
 plt.ylabel("")
 plt.show()
 """
-
+"""
 #Reshape string into float
 le = preprocessing.LabelEncoder()
 n=0
@@ -267,3 +485,4 @@ for item in test["Id"]:
 final=pd.DataFrame(new, columns = ['Id', 'SalePrice'])
 print(final)
 final.to_csv('Finalsub.csv', index = False)
+"""
