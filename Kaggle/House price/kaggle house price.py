@@ -116,6 +116,15 @@ X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, test_size=
 print(X_test,y_test)
 """
 
+
+#Feature Scaling
+scaler = StandardScaler()
+scaler.fit(X_train)
+
+X_train = scaler.transform(X_train)
+X_test = scaler.transform(X_test)
+
+
 #Regression problems for predicting a quantity, using some regression algorithms
 
 #Regression linear simple
@@ -170,7 +179,8 @@ max_depth=3)
 model.fit(X_train, y_train)
 yxgb = model.predict(X_test)
 
-
+"""
+#Feature importances, work whitout feature scaling
 importance=clf.feature_importances_
 feature_imp = pd.Series(importance,index=X_train.columns).sort_values(ascending=False)
 sns.barplot(x=feature_imp, y=feature_imp.index)
@@ -180,7 +190,8 @@ plt.ylabel('Features')
 plt.title("Important features")
 plt.legend()
 #plt.show()
-  
+""" 
+
 #Avergae of all prediction
 avg=(y_predRL+y_predRF+yada+yxgb)/4
 """

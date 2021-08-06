@@ -12,7 +12,7 @@ from sklearn import linear_model
 from sklearn import metrics
 from sklearn import preprocessing
 from sklearn import utils
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score,classification_report,accuracy_score, classification_report
 from sklearn.linear_model import LogisticRegression
 from sklearn import datasets
 from sklearn.preprocessing import StandardScaler
@@ -28,9 +28,179 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
 from sklearn.svm import SVC, LinearSVC, NuSVC
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import f_classif
+from sklearn.metrics import confusion_matrix
 
 
+#Remove sklearn warning
+def warn(*args, **kwargs):
+    pass
+import warnings
+warnings.warn = warn
+
+
+
+
+
+train=pd.read_csv("train.csv")
+test=pd.read_csv("test.csv")
+
+print(train.describe())
+print(train.info())
+print(train)
+print(test.info())
+
+
+#Remove some column because need data engineering
+train=train.drop(["Name","Ticket","Cabin"],1) 
+#Improve train data
+for column in train:
+    if train[column].dtypes=="object":
+        #Change NA value to 0 for categorical variables
+        train[column]=train[column].fillna(0)
+        #Change object value to category
+        train[column] = pd.Categorical(train[column])
+        #Transform str category to number 
+        train[column] = train[column].cat.codes
+    else:
+        #Fill NA with average
+        train[column]=train[column].fillna(train[column].mean())
+
+#Remove some column because need data engineering
+test=test.drop(["Name","Ticket","Cabin"],1) 
+#Improve test data
+for column in test:
+    if test[column].dtypes=="object":
+        #Change NA value to 0 for categorical variables
+        test[column]=test[column].fillna(0)
+        #Change object value to category
+        test[column] = pd.Categorical(test[column])
+        #Transform str category to number 
+        test[column] = test[column].cat.codes
+    else:
+        #Fill NA with average
+        test[column]=test[column].fillna(test[column].mean())
+
+print(train.info())
+print(test.info())
+
+
+#Real test
+X_train = train.drop(["PassengerId","Survived"],1) 
+X_test = test.drop(["PassengerId"],1)
+y_train = train["Survived"]
+
+"""
+#Train test split for scoring purpose
+X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, test_size=0.6)
+print(X_test,y_test)
+"""
+
+#Feature Scaling
+scaler = StandardScaler()
+scaler.fit(X_train)
+
+X_train = scaler.transform(X_train)
+X_test = scaler.transform(X_test)
+
+#Predicting a category (survived or not) with labeled data, so binary classification problem 
+#ANOVA
+# define feature selection
+fs = SelectKBest(score_func=f_classif, k=2)
+# apply feature selection
+X_selected = fs.fit_transform(X_train, y_train)
+
+
+#Random forest classifier
+model=RandomForestClassifier(n_estimators=100)
+model.fit(X_train,y_train)
+y_pred=model.predict(X_test)
+
+#LinearSVC
+model = LinearSVC(verbose=0)
+LinearSVC(C=1.0, class_weight=None, dual=True, fit_intercept=True,
+          intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+          multi_class='ovr', penalty='l2', random_state=None, tol=0.0001,
+          verbose=0)
+
+model.fit(X_train,y_train)
+y_svc=model.predict(X_test)
+score = model.score(X_train,y_train)
+print("Score: ", score)
+
+#Logistic reg
+model = LogisticRegression(solver='liblinear', random_state=0)
+model.fit(X_train,y_train)
+y_log=model.predict(X_test)
+
+#Gaussian NB
+model = GaussianNB()
+model.fit(X_train,y_train)
+y_nb=model.predict(X_test)
+
+#K neighboors
+model = KNeighborsClassifier(n_neighbors=5)
+model.fit(X_train,y_train)
+y_kn=model.predict(X_test)
+
+"""
+#Feature importance RF (don't work with feature scaling)
+importance=clf.feature_importances_
+feature_imp = pd.Series(importance,index=X_train.columns).sort_values(ascending=False)
+sns.barplot(x=feature_imp, y=feature_imp.index)
+# Add labels to your graph
+plt.xlabel('Score')
+plt.ylabel('Features')
+plt.title("Important features")
+plt.legend()
+#plt.show()
+"""
+"""
+#Confusion matrix
+cm = confusion_matrix(y_test, y_pred)
+cl=classification_report(y_test, y_pred)
+print(cm,cl)
+
+
+#Accuracy
+print("Accuracy RF:",metrics.accuracy_score(y_test, y_pred))
+print("Accuracy SVC:",metrics.accuracy_score(y_test, y_svc))
+print("Accuracy LOG:",metrics.accuracy_score(y_test, y_log))
+print("Accuracy NB:",metrics.accuracy_score(y_test, y_nb))
+print("Accuracy KN:",metrics.accuracy_score(y_test, y_kn))
+"""
+
+#Final submission
+sample = pd.read_csv('gender_submission.csv')
+sample["Survived"]=y_pred
+print(sample)
+sample.to_csv('Finalsub.csv', index = False)
+
+#Score whitout data enginnering : 0,77 (accuracy)
+#Improvement possible by taking the Mr,Mrs,Miss from the name, clustering the ticket and cabin number to find some new data
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#OLD VERSION 2019
+
+"""
 
 #Data
 train=pd.read_csv("train.csv")
@@ -41,10 +211,11 @@ print(train.describe())
 #Remplir vide
 print (train.isnull().sum())
 print (test.isnull().sum())
-"""
+
+
 train["Age"]= train["Age"].fillna(train["Age"].mean())
 test["Age"]= test["Age"].fillna(test["Age"].mean())
-"""
+
 
 train["Fare"]= train["Fare"].fillna(train["Fare"].mean())
 test["Fare"]= test["Fare"].fillna(test["Fare"].mean())
@@ -167,6 +338,7 @@ print(train[['Pclass', 'Survived']].groupby(['Pclass'], as_index=False).agg(['me
 print(train[['Embarked', 'Survived']].groupby(['Embarked'], as_index=False).agg(['mean','count']))
 print(train[['SibSp', 'Survived']].groupby(['SibSp'], as_index=False).agg(['mean','count']))
 print(train[['Parch', 'Survived']].groupby(['Parch'], as_index=False).agg(['mean','count']))
+"""
 
 
 """
@@ -198,6 +370,7 @@ print(final[final["Survived"]==1].count())
 final.to_csv('Finalsub.csv', index = False)
 """
 
+"""
 
 X=train[['Pclass',"Genre","Age_cat","SibSp","Parch","Station","Fare_cat","SibSp","Parch"]]
 y=train["Survived"]
@@ -280,7 +453,7 @@ final.to_csv('Finalsub.csv', index = False)
 
 
 
-
+"""
 
 
 
