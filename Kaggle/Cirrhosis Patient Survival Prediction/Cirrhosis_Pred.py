@@ -25,7 +25,7 @@ from lazypredict.Supervised import LazyClassifier,LazyRegressor
 
 
 #Sklearn 
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split,RepeatedKFold,KFold,StratifiedKFold
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LogisticRegression,LinearRegression
 from sklearn.preprocessing import OrdinalEncoder,LabelEncoder, StandardScaler
@@ -90,32 +90,34 @@ FEATURES = [col for col in df.columns if col not in ["id", TARGET]]
 """scaler = StandardScaler()
 df[FEATURES]= scaler.fit_transform(df[FEATURES])
 """
-y = df[TARGET].map({"D": 0, "CL": 1, "C": 2}) 
+y = df[TARGET].map({"C": 0, "CL": 1, "D": 2}) 
 X = df[FEATURES]
 
 
+ # Classic Train-test split
+X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=0.2, random_state=42)
 
 
- # Train-test split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 #Best ML models whitout hyperparameters tunning
 """reg = LazyRegressor(verbose=0, ignore_warnings=False, custom_metric=None)
-models, predictions = reg.fit(X_train, X_test, y_train, y_test)
-print(models)"""
-
+models, predictions = reg.fit(X_train, X_valid, y_train, y_valid)
+print(models)
 """
+
+
 label= TARGET
-predictor = TabularPredictor(label=label).fit(df)
+predictor = TabularPredictor(label=label,eval_metric="log_loss",problem_type='multiclass').fit(df)
 test_data = TabularDataset(df)
 y_pred = predictor.predict(test_data.drop(columns=[label]))
-predictor.evaluate(test_data, silent=True)
-predictor.leaderboard(test_data)"""
+predictor.evaluate(test_data, silent=False)
+predictor.leaderboard(test_data)
+print(predictor.leaderboard(test_data))
 
 
-
-
-space = {'max_depth': hp.choice("max_depth", np.arange(1,20,1,dtype=int)),
+#'objective': 'multi_logloss',
+space = {'objective': 'multi_logloss',
+         'max_depth': hp.choice("max_depth", np.arange(1,20,1,dtype=int)),
         'gamma': hp.uniform ('gamma', 0,1),
         'reg_alpha' : hp.uniform('reg_alpha', 0,50),
         'reg_lambda' : hp.uniform('reg_lambda', 10,100),
@@ -125,20 +127,71 @@ space = {'max_depth': hp.choice("max_depth", np.arange(1,20,1,dtype=int)),
         'learning_rate': hp.uniform('learning_rate', 0, .15),
         #'tree_method':'gpu_hist', 
         #'gpu_id': 0,
+        #'early_stopping_rounds': 50,
         'random_state': 42
         }
-        
+
+#Best space
+space = {'base_score':None,  
+        'booster':None, 
+        'callbacks':None,
+        'colsample_bylevel':None, 
+        'colsample_bynode':None,
+        'colsample_bytree':0.40203137624559515, 
+        'device':None,
+        'early_stopping_rounds':None, 
+        'enable_categorical':False,
+        'eval_metric':None, 
+        'feature_types':None, 
+        'gamma':0.009818594545011378,
+        'grow_policy':None, 
+        'importance_type':None,
+        'interaction_constraints':None, 
+        'learning_rate':0.13521333392474208,
+        'max_bin':None, 
+        'max_cat_threshold':None, 
+        'max_cat_to_onehot':None,
+        'max_delta_step':None, 
+        'max_depth':15, 
+        'max_leaves':None,
+        'min_child_weight':2.780233538069825, 
+        'monotone_constraints':None, 
+        'multi_strategy':None,
+        'n_estimators':10000, 
+        'n_jobs':None, 
+        'num_parallel_tree':None,
+        'objective':'multi:softprob'}
 
 
+#OldBestspace
+space = {'colsample_bytree': 	0.2959104096236953,
+        'learning_rate'	:0.01589064843915767,
+        'min_child_weight':	2.098498967083509,
+        'num_boost_round':	10000,
+        'reg':'squarederror',
+        'random_state' :	42,
+        'reg_alpha'	:0.04940335850946598,
+        'reg_lambda':	47.76148633619056,
+        'n_estimators':10000, 
+        'max_depth':15, 
+}
 
 # Enable MLflow autologging
 mlflow.autolog()
 
+
 def model_tuning(space):
     # Train model
     with mlflow.start_run():
-        #ml_model = xgb.XGBRegressor()
-        ml_model = xgb.XGBRegressor(**space)
+
+        """#Setting the kfold parameters
+        kf = KFold(n_splits = 5, shuffle = True, random_state = 42)
+        for num, (train_id, valid_id) in enumerate(kf.split(X)):
+            X_train, X_valid = X.loc[train_id], X.loc[valid_id]
+            y_train, y_valid = y.loc[train_id], y.loc[valid_id]"""
+
+        #ml_model = xgb.XGBRegressor(**space)
+        ml_model = xgb.XGBClassifier(**space)
         #ml_model = ltb.LGBMRegressor()
         ml_model.fit(X_train, y_train)
         
@@ -146,7 +199,13 @@ def model_tuning(space):
         # Log model
         #mlflow.log_model(ml_model, 'model')
         #mlflow.shap.autolog()
-        predictions = ml_model.predict(X_test)
+        predictions = ml_model.predict(X_valid)
+        
+        """#Kfold
+        oof_preds = np.zeros((X.shape[0],))
+        oof_preds[valid_id] = ml_model.predict(X_valid)
+        fold_rmse = np.sqrt(mean_squared_error(y_valid, oof_preds[valid_id]))
+        print(f"Fold {num} | RMSE: {fold_rmse}")"""
 
         
         """# xAI with Shap values
@@ -177,17 +236,20 @@ def model_tuning(space):
         class_names=['0', '1'],
         mode='classification')
         """
-
+    
         #Metrics
-        mse = mean_squared_error(y_test, predictions)
-        rmse = mean_squared_error(y_test, predictions, squared=False)
-        R2 = ml_model.score(X_test, y_test)
+        mse = mean_squared_error(y_valid, predictions)
+        rmse = mean_squared_error(y_valid, predictions, squared=False)
+        R2 = ml_model.score(X_valid, y_valid)
+        mlflow.log_param("Space", space)
+        mlflow.log_param("features", X_train.columns)
         mlflow.log_metric("mse", mse)
         mlflow.log_metric("rmse", rmse)
         mlflow.log_metric("R2", R2)
 
-        #log_loss =log_loss(y_test,predictions)
-        #mlflow.log_metric("log_loss", log_loss)
+        #acc=accuracy_score(y_valid, predictions)
+        #logloss =log_loss(y_valid,predictions)
+        #mlflow.log_metric("log_loss", logloss)
         
         #Artefact
         #mlflow.log_figure(cm.figure_, 'test_confusion_matrix.png')
@@ -196,7 +258,10 @@ def model_tuning(space):
         return {'loss':rmse, 'status': STATUS_OK, 'model': ml_model}
 
 mlflow.end_run()
-#Run 20 trials.
+
+
+
+"""#Hyperopt 
 trials = Trials()
 best = fmin(fn=model_tuning,
             space=space,
@@ -208,32 +273,37 @@ print(best)
 #Create instace of best model.
 best_model = trials.results[np.argmin([r['loss'] for r in 
     trials.results])]['model']
-
-
+    
 #Examine model hyperparameters
 print(best_model)
 
-xgb_preds_best = best_model.predict(X_test)
-xgb_score_best = mean_squared_error(y_test, xgb_preds_best, squared=False)
+
+xgb_preds_best = best_model.predict(X_valid)
+xgb_score_best = mean_squared_error(y_valid, xgb_preds_best, squared=False)
 print('RMSE_Best_Model:', xgb_score_best)
 
 xgb_standard = xgb.XGBRegressor().fit(X_train, y_train)
-standard_score = mean_squared_error(y_test, xgb_standard.predict(X_test), squared=False)
+standard_score = mean_squared_error(y_valid, xgb_standard.predict(X_valid), squared=False)
 print('RMSE_Standard_Model:', standard_score)
-
-
-
-
-#Specify what the loss is for each model.
-
-
-
 """
+
+
+
+
+
 #Pred for submissions.csv
 Real_test = pd.read_csv(r'D:\DOWNLOADS\test.csv')
 #sub_file = pd.read_csv(r'D:\DOWNLOADS\sample_submission.csv')
-test=Clean_dataframe(Real_test)
+test=Real_test
 
+test["Drug"] = test["Drug"].map({"Placebo": 0, "D-penicillamine": 1})
+test["Sex"] = test["Sex"].map({"M": 0, "F": 1})
+test["Edema"] = test["Edema"].map({"N": 0, "S": 1, "Y": 1})
+
+#Encoding
+enc = OrdinalEncoder()
+enc.fit(test[["Ascites","Hepatomegaly", "Spiders"]])
+test[["Ascites","Hepatomegaly", "Spiders"]] = enc.transform(test[["Ascites","Hepatomegaly", "Spiders"]])
 
 
 ids=[]
@@ -242,15 +312,16 @@ Status_CL=[]
 Status_D=[]
 test = test.drop('id',axis = 1)
 i=0
+
+ml_model = xgb.XGBClassifier(**space)
+ml_model.fit(X_train, y_train)
+
+pred = ml_model.predict_proba(test)
+
 for id in Real_test["id"]:
     
-
-
-    print(id)
-    
-    pred = lr.predict_proba(test)
+    #print(id)  
     ids.append(id)
-
     Status_C.append(pred[i][0])
     Status_CL.append(pred[i][1])
     Status_D.append(pred[i][2])
@@ -260,7 +331,7 @@ for id in Real_test["id"]:
 list_of_tuples = list(zip(ids, Status_C,Status_CL,Status_D))
 sub_result = pd.DataFrame(list_of_tuples, columns=['id', 'Status_C','Status_CL','Status_D'])
 print(sub_result)
-sub_result.to_csv('sample_submission.csv', index = False)"""
+sub_result.to_csv('sample_submission.csv', index = False)
 
 
 
