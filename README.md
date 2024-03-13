@@ -11,6 +11,7 @@
 - 2021 Twitter sentiment analysis (https://www.kaggle.com/kazanova/sentiment140) 
 - 2024 Multi-Class Prediction of Cirrhosis Outcomes (https://www.kaggle.com/competitions/playground-series-s3e26/overview)
 - 2024 HMS - Harmful Brain Activity Classification (https://www.kaggle.com/competitions/hms-harmful-brain-activity-classification/overview)
+- 2024 Steel Plate Defect Prediction (https://www.kaggle.com/competitions/playground-series-s4e3/overview)
 
 
 

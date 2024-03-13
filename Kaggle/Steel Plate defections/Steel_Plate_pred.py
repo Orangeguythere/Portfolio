@@ -118,10 +118,10 @@ for item in TARGET:
     models, predictions = reg.fit(X_train, X_valid, y_train, y_valid)
     print(models)
     """
-    """#Autogluon
+    #Autogluon
     label= item
     train_data = TabularDataset(df_Gluon_train)
-    predictor = TabularPredictor(label=item,eval_metric="roc_auc").fit(train_data,presets='best_quality')
+    predictor = TabularPredictor(label=item,eval_metric="roc_auc").fit(train_data)
     #predictor = TabularPredictor(label=item,eval_metric="roc_auc").fit(train_data)
     test_data = TabularDataset(df_Gluon_test)
     board=predictor.leaderboard(test_data)
@@ -131,15 +131,16 @@ for item in TARGET:
     real_test_data = TabularDataset(test)
     y_pred = predictor.predict_proba(real_test_data)
     perf = predictor.evaluate(test_data, auxiliary_metrics=False)
-    print(perf)"""
+    print(perf)
 
+    """
     #Load Autogluon model
     model_savepath = "AutogluonModels/"+str(item)
     model = TabularPredictor.load(model_savepath, require_version_match=False, verbosity=4)
     real_test_data = TabularDataset(test)
     y_pred = model.predict_proba(real_test_data)
     print(y_pred)
-    #y_pred = predictor.predict(test_data)
+    #y_pred = predictor.predict(test_data)"""
 
     #Load Autogluon Model
     """binarypred = TabularPredictor.load("AutogluonModels/ag-20240310_100414/")
