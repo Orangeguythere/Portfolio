@@ -236,16 +236,6 @@ print("Accuracy:", accuracy)
       
     
 
-# Further steps:
-# - Experiment with different kernels and hyperparameters
-# - Consider cross-validation for more robust evaluation
-# - Explore feature selection or dimensionality reduction techniques
-# - Interpret the model using feature importance scores or SHAP values
-
-
-
-
-
 
 
 
