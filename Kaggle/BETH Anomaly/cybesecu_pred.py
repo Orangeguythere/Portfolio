@@ -92,7 +92,7 @@ numerical_cols = [cname for cname in df.columns if df[cname].dtype in ['int64']]
 df[numerical_cols] = df[numerical_cols].fillna(df[numerical_cols].mean())
 df[numerical_cols] = df[numerical_cols].astype('float64')
 df=df.dropna() 
-df=df.sample(frac=0.1, replace=True, random_state=42)
+#df=df.sample(frac=0.1, replace=True, random_state=42)
 print(df.dtypes)
 
 
@@ -154,6 +154,38 @@ outliers=X_valid.loc[X_valid['anomaly']==-1]
 outlier_index=list(outliers.index)
 #Number of anomalies and normal points here points classified -1 are anomalous
 print(X_valid['anomaly'].value_counts())
+
+
+
+#Graphics Isoltation forest
+# Compute y_score using X_valid[FEATURES] instead of X_valid
+y_score = model.decision_function(X_valid[FEATURES])
+
+# Sort the data by the anomaly score
+sorted_index = np.argsort(y_score)
+y_score_sorted = y_score[sorted_index]
+anomaly_sorted = X_valid['anomaly'].iloc[sorted_index]
+
+# Plot the data, coloring anomalies red
+plt.scatter(range(len(y_score_sorted)), y_score_sorted, c=anomaly_sorted, cmap='viridis')
+plt.xlabel('Data point index')
+plt.ylabel('Anomaly score')
+plt.title('Isolation Forest Anomaly Detection')
+plt.colorbar(label='Anomaly (-1) / Normal (1)')
+plt.show()
+
+# Compute y_score using X_valid[FEATURES] instead of X_valid
+y_score = model.decision_function(X_valid[FEATURES])
+
+# Create a parallel coordinates plot of the features
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.scatter(X_valid['hostName'], X_valid['eventName'], X_valid['Type'], c=X_valid['anomaly'], cmap='viridis')
+ax.set_xlabel('Feature 1')
+ax.set_ylabel('Feature 2')
+ax.set_zlabel('Feature 3')
+plt.title('Isolation Forest Anomaly Detection')
+plt.show()
 
 
 # xAI with Shap values
