@@ -3,6 +3,7 @@
 
   
 ## Kaggle
+- **2024** - [Enefit - Predict Energy Behavior of Prosumers](https://www.kaggle.com/competitions/predict-energy-behavior-of-prosumers/overview) - *Ongoing*
 - **2024** - [OMICS Open Problems - Multimodal Single-Cell Integration](https://www.kaggle.com/competitions/open-problems-multimodal) - *Ongoing*
 - **2024** - [BETH Dataset Cybersecurity Data for Anomaly Detection Research](https://www.kaggle.com/datasets/katehighnam/beth-dataset) - *Isolation Forest*
 - **2024** - [Steel Plate Defect Prediction](https://www.kaggle.com/competitions/playground-series-s4e3/overview) - *Multi Classification Ensemble Methods*
