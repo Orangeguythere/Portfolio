@@ -1,7 +1,7 @@
 # Portfolio
 
 
-
+  
 ## Kaggle
 - **2024** - [OMICS Open Problems - Multimodal Single-Cell Integration](https://www.kaggle.com/competitions/open-problems-multimodal) - *Ongoing*
 - **2024** - [BETH Dataset Cybersecurity Data for Anomaly Detection Research](https://www.kaggle.com/datasets/katehighnam/beth-dataset) - *Isolation Forest*
@@ -16,14 +16,13 @@
 - **2020** - [Digit recogniser](https://www.kaggle.com/c/digit-recognizer) Correctly identify digits from a dataset of tens of thousands of handwritten images. - *Computer Vision CNN*
 - **2020** - [Titanic](https://www.kaggle.com/c/titanic) Predicts which passengers survived the Titanic shipwreck. - *Classification RF*
   
-### Kaggle 
-- 2024 OMICS Open Problems - Multimodal Single-Cell Integration (https://www.kaggle.com/competitions/open-problems-multimodal)
+
+## Projects
+- **2024** - MistralAI : Use Mistral LLM
+- **2024** - Cybersecurity Monitoring Packet with PyShark, Influxdb, Grafana
+- **2020** - University project with Enedis network theory Twitter : API Twitter collect & analysis for Enedis, and Gephi results
+- **2020** - TGV Max Bot : Dashboard made with dash components to make a seleniumm bot for TGV Max (sales specials) price checking
+- **2020** - Welcometojungle bot : Selecium for job checking on WelcometoJungle
+- **2020** - FastAI : Random projects (SIIM-ISIC Melanoma Classification,...) with fastAI deep learning
 
 
-### Projects
-- 2020 University project with Enedis network theory Twitter : API Twitter collect & analysis for Enedis, and Gephi results
-- 2020 TGV Max Bot : Dashboard made with dash & bootstraps to make a seleniumm bot for TGV Max (special offer in limited time) price checking
-- 2020 Welcometojungle bot : Selecium for job checking on WelcometoJungle
-- 2021 FastAI : Random projects (SIIM-ISIC Melanoma Classification,...) with fastAI deep learning
-- 2024 MistralAI : Use Mistral LLM
-- 2024 Cybersecurity Monitoring Packet with PyShark, Influxdb, Grafana
