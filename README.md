@@ -9,6 +9,7 @@
 - **2024** - [Steel Plate Defect Prediction](https://www.kaggle.com/competitions/playground-series-s4e3/overview) - *Multi Classification Ensemble Methods*
 - **2024** - [HMS - Harmful Brain Activity Classification](https://www.kaggle.com/competitions/hms-harmful-brain-activity-classification/overview) - *Ongoing*
 - **2024** - [Multi-Class Prediction of Cirrhosis Outcomes](https://www.kaggle.com/competitions/playground-series-s3e26/overview) - *XGBoost*
+- **2020** - [Tweet Sentiment Extraction](https://www.kaggle.com/competitions/tweet-sentiment-extraction/overview) - *NLP Bert, added .ipynb in 2024*
 - **2020** - [Sentiment140 dataset with 1.6 million tweets](https://www.kaggle.com/kazanova/sentiment140) - *Removed, see course project for Enedis*
 - **2020** - [Predict Future Sales](https://www.kaggle.com/c/competitive-data-science-predict-future-sales) - *CNN*
 - **2020** - [Natural Language Processing with Disaster Tweets](https://www.kaggle.com/c/nlp-getting-started) - *Removed*
