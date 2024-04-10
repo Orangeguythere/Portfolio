@@ -5,6 +5,8 @@ from ydata_profiling import ProfileReport
 
 #Classic
 import os
+from tqdm.notebook import tqdm
+import time
 import pandas as pd
 import numpy as np
 import xgboost as xgb
@@ -46,6 +48,7 @@ from rdkit.Chem import Draw, AllChem
 from rdkit import RDLogger
 
 
+
 #With Spark
 
 #from pyspark.sql import SparkSession 
@@ -63,13 +66,13 @@ df = con.query(f"""(SELECT *
                         FROM parquet_scan('D:\\DOWNLOADS\\leash-BELKA\\train.parquet')
                         WHERE binds = 0
                         ORDER BY random()
-                        LIMIT 30000)
+                        LIMIT 300000)
                         UNION ALL
                         (SELECT *
                         FROM parquet_scan('D:\\DOWNLOADS\\leash-BELKA\\train.parquet')
                         WHERE binds = 1
                         ORDER BY random()
-                        LIMIT 30000)""").df()
+                        LIMIT 100000)""").df()
 
 con.close()
 print(df)
@@ -82,7 +85,7 @@ mol.show()"""
 #MODEL FROM KAGGLE TEST1
 #Extended-connectivity fingerprints (ECFPs) are a type of molecular fingerprint specifically designed for predicting and analyzing molecular activity and properties.
 # Convert SMILES to RDKit molecules
-df['molecule'] = df['molecule_smiles'].apply(Chem.MolFromSmiles)
+
 
 # Generate ECFPs
 def generate_ecfp(molecule, radius=2, bits=1024):
@@ -90,9 +93,9 @@ def generate_ecfp(molecule, radius=2, bits=1024):
         return None
     return list(AllChem.GetMorganFingerprintAsBitVect(molecule, radius, nBits=bits))
 
+TARGET = "binds"
+df['molecule'] = df['molecule_smiles'].apply(Chem.MolFromSmiles)
 df['ecfp'] = df['molecule'].apply(generate_ecfp)
-
-
 
 
 # One-hot encode the protein_name
@@ -101,17 +104,17 @@ protein_onehot = onehot_encoder.fit_transform(df['protein_name'].values.reshape(
 
 # Combine ECFPs and one-hot encoded protein_name
 X = [ecfp + protein for ecfp, protein in zip(df['ecfp'].tolist(), protein_onehot.tolist())]
-y = df['binds'].tolist()
+y = df[TARGET].tolist()
 
 # Split the data into train and test sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Create and train the random forest model
-rf_model = xgb.XGBClassifier(n_estimators=100, random_state=42)
-rf_model.fit(X_train, y_train)
+# Create and train the model
+model = xgb.XGBClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
 
 # Make predictions on the test set
-y_pred_proba = rf_model.predict_proba(X_test)[:, 1]  # Probability of the positive class
+y_pred_proba = model.predict_proba(X_test)[:, 1]  # Probability of the positive class
 
 # Calculate the mean average precision
 map_score = average_precision_score(y_test, y_pred_proba)
@@ -119,28 +122,39 @@ print(f"Mean Average Precision (mAP): {map_score:.2f}")
 
 
 
-# Process the test.parquet file chunk by chunk
+
+
+
+
+
+#Prediction on real test
+
 test_file = 'D:\\DOWNLOADS\\leash-BELKA\\test.csv'
-output_file = 'submission.csv'  # Specify the path and filename for the output file
+n=0
+start_list=[]
+tab = pd.DataFrame(columns=['id', 'binds'])
+for chunk in pd.read_csv(test_file, chunksize=100000,iterator=False):
+    n+=1
 
-# Read the test.parquet file into a pandas DataFrame
-for df_test in pd.read_csv(test_file, chunksize=100000):
+    chunk['molecule'] = chunk['molecule_smiles'].apply(Chem.MolFromSmiles)
+    chunk['ecfp'] = chunk['molecule'].apply(generate_ecfp)
+    protein_onehot_test = onehot_encoder.fit_transform(chunk['protein_name'].values.reshape(-1, 1))
 
-    # Generate ECFPs for the molecule_smiles
-    df_test['molecule'] = df_test['molecule_smiles'].apply(Chem.MolFromSmiles)
-    df_test['ecfp'] = df_test['molecule'].apply(generate_ecfp)
+    X_real = [ecfp + protein for ecfp, protein in zip(chunk['ecfp'].tolist(), protein_onehot_test.tolist())]
+    #chunk["protein_name"] = chunk["protein_name"].map({"sEH": 1, "BRD4": 2, "HSA": 3}) 
 
-    # One-hot encode the protein_name
-    protein_onehot = onehot_encoder.transform(df_test['protein_name'].values.reshape(-1, 1))
 
-    # Combine ECFPs and one-hot encoded protein_name
-    X_test = [ecfp + protein for ecfp, protein in zip(df_test['ecfp'].tolist(), protein_onehot.tolist())]
+    pred = model.predict_proba(X_real)
+    transformdf = pd.DataFrame(pred)
+    new_data = {"id": chunk["id"].values,"binds": transformdf[1].values}
+    df_new_rows = pd.DataFrame(new_data)
+    tab = pd.concat([tab, df_new_rows], ignore_index=True)
 
-    # Predict the probabilities
-    probabilities = rf_model.predict_proba(X_test)[:, 1]
+    print(n)
 
-    # Create a DataFrame with 'id' and 'probability' columns
-    output_df = pd.DataFrame({'id': df_test['id'], 'binds': probabilities})
+tab.to_csv('sample_submission.csv', index = False)
 
-    # Save the output DataFrame to a CSV file
-    output_df.to_csv(output_file, index=False, mode='a', header=not os.path.exists(output_file))
+
+
+
+
