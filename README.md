@@ -3,8 +3,8 @@
 
   
 ## Kaggle
-- **2024** - [Leash Bio - Predict New Medicines with BELKA](https://www.kaggle.com/competitions/leash-BELKA/overview) - *RDKIT, ECFPs and XGBoost*
-- **2024** - [Enefit - Predict Energy Behavior of Prosumers](https://www.kaggle.com/competitions/predict-energy-behavior-of-prosumers/overview) - *Ongoing*
+- **2024** - [Leash Bio - Predict New Medicines with BELKA](https://www.kaggle.com/competitions/leash-BELKA/overview) - *RDKIT molecules, ECFPs*
+- **2024** - [Enefit - Predict Energy Behavior of Prosumers](https://www.kaggle.com/competitions/predict-energy-behavior-of-prosumers/overview) - *Times Series XGBoost*
 - **2024** - [BETH Dataset Cybersecurity Data for Anomaly Detection Research](https://www.kaggle.com/datasets/katehighnam/beth-dataset) - *Isolation Forest*
 - **2024** - [Steel Plate Defect Prediction](https://www.kaggle.com/competitions/playground-series-s4e3/overview) - *Multi Classification Ensemble Methods*
 - **2024** - [Multi-Class Prediction of Cirrhosis Outcomes](https://www.kaggle.com/competitions/playground-series-s3e26/overview) - *XGBoost*
