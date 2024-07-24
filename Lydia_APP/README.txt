@@ -8,12 +8,12 @@ api_APP.py : FastAPI server
 UI_StreamLit.py : Frontend UI for API with Streamlit
 download_image.py: A python script to download the files from the above csv
 list_image.csv : .csv for images
-/images: Directory containing the dataset of images for similarity comparison, automatically build by download_image.py
+/images: Directory containing the dataset of images for similarity comparison
 
 
 ## How to Use
 
-1. Ensure your image dataset is in the pics/ directory.
+1. Ensure your image dataset is in the /images directory built with download_image.py.
 2. Run the server: api_APP, the API will be available at 127.0.0.1:8000/docs
 3. For API Rest only, go to the /find_similar endpoint with a POST request, uploading an image file
 4. For the UI API with Streamlit, run UI_StreamLit.py, then copy/paste the line, for me it's "streamlit run d:\DOWNLOADS\Lydia_APP\UI_StreamLit.py [ARGUMENTS]"
