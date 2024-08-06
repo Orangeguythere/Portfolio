@@ -3,13 +3,11 @@
 
   
 ## Kaggle
-<<<<<<< HEAD
 - **2024** - [Enefit - Predict Energy Behavior of Prosumers](https://www.kaggle.com/competitions/predict-energy-behavior-of-prosumers/overview) - *Ongoing*
 - **2024** - [OMICS Open Problems - Multimodal Single-Cell Integration](https://www.kaggle.com/competitions/open-problems-multimodal) - *Ongoing*
 =======
 - **2024** - [Leash Bio - Predict New Medicines with BELKA](https://www.kaggle.com/competitions/leash-BELKA/overview) - *RDKIT molecules, ECFPs*
 - **2024** - [Enefit - Predict Energy Behavior of Prosumers](https://www.kaggle.com/competitions/predict-energy-behavior-of-prosumers/overview) - *Times Series XGBoost*
->>>>>>> 00aeef1507ce0ba035588c9ce51daa77a3240e45
 - **2024** - [BETH Dataset Cybersecurity Data for Anomaly Detection Research](https://www.kaggle.com/datasets/katehighnam/beth-dataset) - *Isolation Forest*
 - **2024** - [Steel Plate Defect Prediction](https://www.kaggle.com/competitions/playground-series-s4e3/overview) - *Multi Classification Ensemble Methods*
 - **2024** - [Multi-Class Prediction of Cirrhosis Outcomes](https://www.kaggle.com/competitions/playground-series-s3e26/overview) - *XGBoost*
@@ -21,6 +19,7 @@
   
 
 ## Projects
+- **2024** - API_UI: Some ML apps with API
 - **2024** - MistralAI : Use Mistral LLM
 - **2024** - Cybersecurity Monitoring Packet with PyShark, Influxdb, Grafana
 - **2020** - University project with Enedis network theory Twitter : API Twitter collect & analysis for Enedis, and Gephi results
